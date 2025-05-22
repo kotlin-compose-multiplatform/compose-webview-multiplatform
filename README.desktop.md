@@ -10,6 +10,11 @@ After importing the library, some configurations need to be done before running 
 
 ## Initialization
 
+> [!NOTE]  
+> Starting from version 1.9.40, KCEF v2024.04.20.4 is used and it is possible to load JCEF directly from bundled binary.
+>
+>  So if you build your app with the JetBrains Runtime JDK, it's no longer required to download the packages.
+
 Take a look at the KCEF Compose documentation here: [DatL4g/KCEF](https://github.com/DatL4g/KCEF/blob/master/COMPOSE.md)
 
 Please use the following example as a reference.
@@ -20,11 +25,19 @@ fun main() = application {
         var restartRequired by remember { mutableStateOf(false) }
         var downloading by remember { mutableStateOf(0F) }
         var initialized by remember { mutableStateOf(false) }
+        val download: Download = remember { Builder().github().build() }
 
         LaunchedEffect(Unit) {
             withContext(Dispatchers.IO) {
                 KCEF.init(builder = {
                     installDir(File("kcef-bundle"))
+                    
+                    /*
+                      Add this code when using JDK 17.
+                      Builder().github {
+                          release("jbr-release-17.0.10b1087.23")
+                      }.buffer(download.bufferSize).build()
+                     */
                     progress {
                         onDownloading {
                             downloading = max(it, 0F)

@@ -324,8 +324,9 @@ open class AccompanistWebViewClient : WebViewClient() {
         if (error != null) {
             state.errorsForCurrentRequest.add(
                 WebViewError(
-                    error.errorCode,
-                    error.description.toString(),
+                    code = error.errorCode,
+                    description = error.description.toString(),
+                    isFromMainFrame = request?.isForMainFrame ?: false,
                 ),
             )
         }
@@ -484,6 +485,14 @@ open class AccompanistWebChromeClient : WebChromeClient() {
         } else {
             request.deny()
             KLogger.d { "onPermissionRequest denied permissions: ${request.resources}" }
+        }
+    }
+
+    override fun getDefaultVideoPoster(): Bitmap? {
+        return if (state.webSettings.androidWebSettings.hideDefaultVideoPoster) {
+            Bitmap.createBitmap(50, 50, Bitmap.Config.ARGB_8888)
+        } else {
+            super.getDefaultVideoPoster()
         }
     }
 }

@@ -14,6 +14,8 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.readValue
 import platform.CoreGraphics.CGRectZero
 import platform.Foundation.setValue
+import platform.WebKit.WKAudiovisualMediaTypeAll
+import platform.WebKit.WKAudiovisualMediaTypeNone
 import platform.WebKit.WKWebView
 import platform.WebKit.WKWebViewConfiguration
 import platform.WebKit.javaScriptEnabled
@@ -30,6 +32,7 @@ actual fun ActualWebView(
     webViewJsBridge: WebViewJsBridge?,
     onCreated: (NativeWebView) -> Unit,
     onDispose: (NativeWebView) -> Unit,
+    platformWebViewParams: PlatformWebViewParams?,
     factory: (WebViewFactoryParam) -> NativeWebView,
 ) {
     IOSWebView(
@@ -46,6 +49,8 @@ actual fun ActualWebView(
 
 /** iOS WebView factory parameters: configuration created from WebSettings. */
 actual data class WebViewFactoryParam(val config: WKWebViewConfiguration)
+
+actual class PlatformWebViewParams
 
 /** Default WebView factory for iOS. */
 @OptIn(ExperimentalForeignApi::class)
@@ -81,6 +86,12 @@ fun IOSWebView(
             val config =
                 WKWebViewConfiguration().apply {
                     allowsInlineMediaPlayback = true
+                    mediaTypesRequiringUserActionForPlayback =
+                        if (state.webSettings.iOSWebSettings.mediaPlaybackRequiresUserGesture) {
+                            WKAudiovisualMediaTypeAll
+                        } else {
+                            WKAudiovisualMediaTypeNone
+                        }
                     defaultWebpagePreferences.allowsContentJavaScript =
                         state.webSettings.isJavaScriptEnabled
                     preferences.apply {
@@ -130,6 +141,8 @@ fun IOSWebView(
                         showsVerticalScrollIndicator = it.showVerticalScrollIndicator
                     }
                 }
+
+                this.setInspectable(state.webSettings.iOSWebSettings.isInspectable)
             }.also {
                 val iosWebView = IOSWebView(it, scope, webViewJsBridge)
                 state.webView = iosWebView
